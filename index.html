@@ -585,7 +585,7 @@
     const key = window.__ENV__?.GEMINI_API_KEY || '';
     if (!key) throw new Error('ไม่พบ Gemini API Key กรุณาตั้งค่า GEMINI_API_KEY ใน Vercel');
 
-    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
     const prompt = `นี่คือรูปตารางเวรพยาบาล กรุณาอ่านตารางเวรของ "จิราวรรณ ศรีหล้า" ทุกวันในเดือน ${month}
 
 ตอบเป็น JSON เท่านั้น ห้ามมีข้อความอื่น ห้ามมี markdown backtick:
