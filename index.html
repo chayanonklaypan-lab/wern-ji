@@ -403,25 +403,27 @@
 
   <input type="text" id="month-input" class="month-input" placeholder="เช่น มิถุนายน 2568" value="">
 
-  <!-- file inputs แยกออกมา ไม่อยู่ใน label/button -->
-  <input type="file" id="file-input-camera" accept="image/*" capture="environment" style="display:none">
-  <input type="file" id="file-input-gallery" accept="image/*" style="display:none">
-
   <div class="upload-area" id="upload-area">
     <div class="upload-icon">🗓️</div>
     <div class="upload-text">เลือกรูปตารางเวรของจิ</div>
     <div class="upload-buttons">
-      <button type="button" class="upload-btn" id="btn-camera">
+      <label class="upload-btn" for="file-input-camera">
         <span class="upload-btn-icon">📷</span>
         <span>ถ่ายรูป</span>
-      </button>
-      <button type="button" class="upload-btn" id="btn-gallery">
+      </label>
+      <label class="upload-btn" for="file-input-gallery">
         <span class="upload-btn-icon">🖼️</span>
         <span>เลือกจากคลัง</span>
-      </button>
+      </label>
     </div>
     <div class="upload-hint">รองรับ JPG, PNG, HEIC ทุกรูปแบบ</div>
   </div>
+
+  <!-- file inputs อยู่นอก label — label ผูกผ่าน for/id -->
+  <input type="file" id="file-input-camera" accept="image/*" capture="environment"
+    style="position:fixed;top:-200px;left:-200px;width:1px;height:1px;opacity:0;pointer-events:none;" tabindex="-1">
+  <input type="file" id="file-input-gallery" accept="image/*"
+    style="position:fixed;top:-200px;left:-200px;width:1px;height:1px;opacity:0;pointer-events:none;" tabindex="-1">
 
   <img id="preview-img" class="preview-img" alt="ตัวอย่างรูป">
 
@@ -826,9 +828,6 @@ startDayOfWeek: วันแรกของเดือน (0=อาทิตย
   const fileCamera = document.getElementById('file-input-camera');
   const fileGallery = document.getElementById('file-input-gallery');
   let base64Image = null;
-
-  document.getElementById('btn-camera').addEventListener('click', () => fileCamera.click());
-  document.getElementById('btn-gallery').addEventListener('click', () => fileGallery.click());
 
   function handleFileSelect(e) {
     const file = e.target.files[0];
