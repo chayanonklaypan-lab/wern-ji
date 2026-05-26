@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a56db">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="เวรจิ">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+  <title>เวรจิ - ตารางเวรของจิ</title>
+  <style>
+    :root {
+      --primary: #1a56db;
+      --primary-light: #e8f0fe;
+      --morning-color: #1a56db;
+      --morning-bg: #e8f0fe;
+      --afternoon-color: #0d7a4e;
+      --afternoon-bg: #e6f4ef;
+      --night-color: #92400e;
+      --night-bg: #fef3c7;
+      --sv-color: #5b21b6;
+      --sv-bg: #ede9fe;
+      --off-color: #6b7280;
+      --off-bg: #f3f4f6;
+      --holiday-color: #dc2626;
+      --holiday-bg: #fee2e2;
+      --text: #111827;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #f9fafb;
+      --white: #ffffff;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+    }
+
+    .screen { display: none; padding: 20px; min-height: 100vh; }
+    .screen.active { display: block; }
+
+    /* Header */
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .app-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    /* Upload Screen */
+    .greeting { font-size: 28px; font-weight: 600; margin-bottom: 6px; }
+    .subtitle { color: var(--text-muted); margin-bottom: 28px; font-size: 15px; }
+
+    .month-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      font-family: 'Sarabun', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      background: var(--white);
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+    .month-input:focus { outline: none; border-color: var(--primary); }
+
+    .upload-area {
+      background: var(--white);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .upload-area:hover { border-color: var(--primary); background: var(--primary-light); }
+    .upload-area input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .upload-icon { font-size: 48px; margin-bottom: 12px; }
+    .upload-text { font-size: 16px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+    .upload-hint { font-size: 13px; color: var(--text-muted); }
+
+    .preview-img {
+      width: 100%;
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      display: none;
+      box-shadow: var(--shadow);
+    }
+    .preview-img.show { display: block; }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'Sarabun', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-primary:hover { background: #1447b5; }
+    .btn-primary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    .btn-secondary {
+      background: var(--white);
+      color: var(--text);
+      border: 2px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--bg); }
+    .btn-sm {
+      width: auto;
+      padding: 8px 16px;
+      font-size: 14px;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+    .loading.show { display: block; }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Result Screen */
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .result-title { font-size: 22px; font-weight: 600; }
+    .result-month { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+    .stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+    .stat-value { font-size: 24px; font-weight: 600; }
+    .stat-card.morning .stat-value { color: var(--morning-color); }
+    .stat-card.afternoon .stat-value { color: var(--afternoon-color); }
+    .stat-card.night .stat-value { color: var(--night-color); }
+    .stat-card.off .stat-value { color: var(--off-color); }
+
+    .hours-card {
+      background: var(--primary);
+      color: white;
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .hours-label { font-size: 14px; opacity: 0.85; }
+    .hours-value { font-size: 22px; font-weight: 600; }
+
+    /* Calendar */
+    .calendar-section { margin-bottom: 20px; }
+    .section-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
+    }
+    .cal-header {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 6px 0;
+    }
+    .cal-header.weekend { color: var(--holiday-color); }
+    .cal-day {
+      border-radius: 8px;
+      padding: 4px 2px;
+      text-align: center;
+      min-height: 52px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      font-size: 12px;
+    }
+    .cal-day.empty { background: transparent; }
+    .cal-day.has-shift { background: var(--white); box-shadow: var(--shadow); }
+    .cal-day.weekend-day { background: #f0f0f0; }
+    .cal-date { font-size: 13px; font-weight: 600; color: var(--text); padding: 3px 0 1px; }
+    .cal-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 4px;
+      margin: 1px 0;
+    }
+    .cal-shift-name { font-size: 9px; color: var(--text-muted); }
+
+    .shift-M .cal-badge, .shift-T .cal-badge { background: var(--morning-bg); color: var(--morning-color); }
+    .shift-W .cal-badge, .shift-Th .cal-badge { background: var(--afternoon-bg); color: var(--afternoon-color); }
+    .shift-F .cal-badge { background: var(--night-bg); color: var(--night-color); }
+    .shift-S .cal-badge, .shift-Su .cal-badge { background: var(--sv-bg); color: var(--sv-color); }
+    .shift-O .cal-badge { background: #fff7ed; color: #c2410c; }
+    .shift-V .cal-badge { background: #dcfce7; color: #15803d; }
+    .shift-BD .cal-badge { background: var(--holiday-bg); color: var(--holiday-color); }
+    .shift-X .cal-badge, .shift-- .cal-badge { background: var(--off-bg); color: var(--off-color); }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+
+    .action-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .action-buttons .btn { font-size: 13px; padding: 10px; }
+    .action-buttons-full { margin-bottom: 20px; }
+
+    /* Notify Screen */
+    .notify-header { margin-bottom: 24px; }
+    .notify-title { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+    .notify-sub { color: var(--text-muted); font-size: 14px; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 14px; font-weight: 500; margin-bottom: 6px; display: block; color: var(--text); }
+    .form-select, .form-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      font-family: 'Sarabun', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--white);
+    }
+    .form-select:focus, .form-input:focus { outline: none; border-color: var(--primary); }
+
+    .time-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1f2937;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: transform 0.3s ease;
+      z-index: 999;
+      white-space: nowrap;
+      max-width: 90vw;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* Error */
+    .error-box {
+      background: var(--holiday-bg);
+      color: var(--holiday-color);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      display: none;
+    }
+    .error-box.show { display: block; }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--primary);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: 'Sarabun', sans-serif;
+      padding: 0;
+      margin-bottom: 4px;
+    }
+    .back-btn:hover { opacity: 0.7; }
+
+    .today-highlight .cal-date {
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ENV inject -->
+<script>
+  window.__ENV__ = {};
+  fetch('/api/config')
+    .then(r => r.json())
+    .then(cfg => { window.__ENV__ = cfg; })
+    .catch(() => {});
+</script>
+
+<!-- Screen 1: Upload -->
+<div id="upload-screen" class="screen active">
+  <div class="app-header">
+    <div></div>
+    <span class="app-name">เวรจิ</span>
+  </div>
+  <h1 class="greeting">สวัสดีจิ 👋</h1>
+  <p class="subtitle">ดูตารางเวรของจิ เดือนนี้</p>
+
+  <input type="text" id="month-input" class="month-input" placeholder="เช่น มิถุนายน 2568" value="">
+
+  <div class="upload-area" id="upload-area">
+    <input type="file" id="file-input" accept="image/*" capture="environment">
+    <div class="upload-icon">📸</div>
+    <div class="upload-text">ถ่ายรูปหรือเลือกรูปตารางเวร</div>
+    <div class="upload-hint">กดที่นี่เพื่อถ่ายรูปหรือเลือกไฟล์รูป</div>
+  </div>
+
+  <img id="preview-img" class="preview-img" alt="ตัวอย่างรูป">
+
+  <div id="error-box" class="error-box"></div>
+
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <p>AI กำลังอ่านตารางของจิ...</p>
+    <p style="font-size:13px;color:var(--text-muted);margin-top:6px">ใช้เวลาประมาณ 5-15 วินาที</p>
+  </div>
+
+  <button id="analyze-btn" class="btn btn-primary" disabled>อ่านตาราง ✨</button>
+
+  <div id="saved-banner" style="display:none;text-align:center;margin-top:20px;padding:12px;background:var(--primary-light);border-radius:var(--radius);font-size:14px;color:var(--primary);">
+    มีข้อมูลที่บันทึกไว้ — <span id="view-saved-btn" style="font-weight:600;cursor:pointer;text-decoration:underline;">ดูตารางเดิม</span>
+  </div>
+</div>
+
+<!-- Screen 2: Result -->
+<div id="result-screen" class="screen">
+  <div class="result-header">
+    <div>
+      <button class="back-btn" onclick="showScreen('upload-screen')">← กลับ</button>
+      <div class="result-title">ตารางเวรจิ</div>
+      <div class="result-month" id="result-month-label"></div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card morning">
+      <div class="stat-label">🌅 เวรเช้า</div>
+      <div class="stat-value" id="stat-morning">0</div>
+      <div style="font-size:12px;color:var(--text-muted)">วัน</div>
+    </div>
+    <div class="stat-card afternoon">
+      <div class="stat-label">🌇 เวรบ่าย</div>
+      <div class="stat-value" id="stat-afternoon">0</div>
+      <div style="font-size:12px;color:var(--text-muted)">วัน</div>
+    </div>
+    <div class="stat-card night">
+      <div class="stat-label">🌙 เวรดึก</div>
+      <div class="stat-value" id="stat-night">0</div>
+      <div style="font-size:12px;color:var(--text-muted)">วัน</div>
+    </div>
+    <div class="stat-card off">
+      <div class="stat-label">🔴 วันหยุด</div>
+      <div class="stat-value" id="stat-off">0</div>
+      <div style="font-size:12px;color:var(--text-muted)">วัน</div>
+    </div>
+  </div>
+
+  <div class="hours-card">
+    <div>
+      <div class="hours-label">ชั่วโมงทำงานรวม</div>
+      <div style="font-size:12px;opacity:0.7">เช้า+บ่าย+ดึก × 8 ชม.</div>
+    </div>
+    <div class="hours-value"><span id="stat-hours">0</span> ชม.</div>
+  </div>
+
+  <div class="calendar-section">
+    <div class="section-title">📅 ปฏิทินประจำเดือน</div>
+    <div class="cal-grid" id="cal-grid">
+      <div class="cal-header">อา</div>
+      <div class="cal-header">จ</div>
+      <div class="cal-header">อ</div>
+      <div class="cal-header">พ</div>
+      <div class="cal-header">พฤ</div>
+      <div class="cal-header">ศ</div>
+      <div class="cal-header weekend">ส</div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--morning-bg);border:1px solid var(--morning-color)"></div>เวรเช้า</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--afternoon-bg);border:1px solid var(--afternoon-color)"></div>เวรบ่าย</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--night-bg);border:1px solid var(--night-color)"></div>เวรดึก</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--sv-bg);border:1px solid var(--sv-color)"></div>เวร S/Su</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--off-bg);border:1px solid var(--off-color)"></div>หยุด</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--holiday-bg);border:1px solid var(--holiday-color)"></div>วันหยุดราชการ</div>
+  </div>
+
+  <div class="action-buttons">
+    <button class="btn btn-secondary" onclick="showNotifyScreen()">🔔 แจ้งเตือน</button>
+    <button class="btn btn-secondary" onclick="copyScheduleHandler()">📋 คัดลอก</button>
+  </div>
+  <div class="action-buttons">
+    <button class="btn btn-secondary" onclick="showScreen('upload-screen')">🔄 อ่านใหม่</button>
+    <button class="btn btn-secondary" onclick="saveToFirebase()">☁️ บันทึก</button>
+  </div>
+</div>
+
+<!-- Screen 3: Notifications -->
+<div id="notify-screen" class="screen">
+  <button class="back-btn" onclick="showScreen('result-screen')">← กลับ</button>
+  <div class="notify-header">
+    <div class="notify-title">🔔 ตั้งแจ้งเตือน</div>
+    <div class="notify-sub">จิจะได้รับการแจ้งเตือนก่อนเข้าเวร</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">แจ้งเตือนล่วงหน้า</div>
+    <div class="form-group">
+      <select id="notify-before" class="form-select">
+        <option value="30">30 นาทีก่อนเข้าเวร</option>
+        <option value="60" selected>1 ชั่วโมงก่อนเข้าเวร</option>
+        <option value="120">2 ชั่วโมงก่อนเข้าเวร</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">เวลาเริ่มเวร (แก้ไขได้)</div>
+    <div class="time-inputs">
+      <div class="form-group">
+        <label class="form-label">🌅 เวรเช้า (M/T)</label>
+        <input type="time" id="time-morning" class="form-input" value="07:00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">🌇 เวรบ่าย (W/Th)</label>
+        <input type="time" id="time-afternoon" class="form-input" value="15:00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">🌙 เวรดึก (F)</label>
+        <input type="time" id="time-night" class="form-input" value="23:00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">☀️ เวร S</label>
+        <input type="time" id="time-s" class="form-input" value="07:00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">🌆 เวร Su</label>
+        <input type="time" id="time-su" class="form-input" value="15:00">
+      </div>
+    </div>
+  </div>
+
+  <button id="set-notify-btn" class="btn btn-primary" onclick="setNotifications()">ตั้งแจ้งเตือนทั้งหมด 🔔</button>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+  import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+  // ---- State ----
+  let currentSchedule = null;
+  let db = null;
+
+  // ---- Firebase init (lazy, after ENV loaded) ----
+  async function initFirebase() {
+    if (db) return db;
+    await new Promise(r => setTimeout(r, 600)); // wait for /api/config fetch
+    const cfg = window.__ENV__;
+    if (!cfg?.FIREBASE_PROJECT_ID) return null;
+    try {
+      const app = initializeApp({
+        apiKey: cfg.FIREBASE_API_KEY,
+        authDomain: cfg.FIREBASE_AUTH_DOMAIN,
+        projectId: cfg.FIREBASE_PROJECT_ID,
+        storageBucket: cfg.FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: cfg.FIREBASE_MESSAGING_SENDER_ID,
+        appId: cfg.FIREBASE_APP_ID,
+      });
+      db = getFirestore(app);
+      return db;
+    } catch (e) { return null; }
+  }
+
+  // ---- Gemini API ----
+  async function analyzeSchedule(base64Image, month) {
+    await new Promise(r => setTimeout(r, 400));
+    const key = window.__ENV__?.GEMINI_API_KEY || '';
+    if (!key) throw new Error('ไม่พบ Gemini API Key กรุณาตั้งค่า GEMINI_API_KEY ใน Vercel');
+
+    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+    const prompt = `นี่คือรูปตารางเวรพยาบาล กรุณาอ่านตารางเวรของ "จิราวรรณ ศรีหล้า" ทุกวันในเดือน ${month}
+
+ตอบเป็น JSON เท่านั้น ห้ามมีข้อความอื่น ห้ามมี markdown backtick:
+{"name":"จิราวรรณ ศรีหล้า","month":"${month}","startDayOfWeek":0,"totalDays":30,"days":[{"date":1,"shift":"M"},{"date":2,"shift":"X"}]}
+
+startDayOfWeek: วันแรกของเดือน (0=อาทิตย์,1=จันทร์,2=อังคาร,3=พุธ,4=พฤหัส,5=ศุกร์,6=เสาร์)
+รหัสเวร: M=เวรเช้า, T=เวรเช้า, W=เวรบ่าย, Th=เวรบ่าย, F=เวรดึก, S=เวรส, Su=เวรอา, O=OT, V=ลาพักร้อน, BD=วันหยุดราชการ, X=หยุด, -=ไม่มีข้อมูล
+ถ้าหาชื่อจิราวรรณไม่พบในตาราง ตอบ: {"error":"ไม่พบชื่อในตาราง"}`;
+
+    const res = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [
+          { inline_data: { mime_type: 'image/jpeg', data: base64Image } },
+          { text: prompt }
+        ]}],
+        generationConfig: { temperature: 0, maxOutputTokens: 2000 }
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error?.message || `API Error ${res.status}`);
+    }
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const cleaned = text.trim().replace(/^```json\s*/,'').replace(/\s*```$/,'');
+    return JSON.parse(cleaned);
+  }
+
+  // ---- Render Calendar ----
+  const SHIFT_LABELS = { M:'เช้า',T:'เช้า',W:'บ่าย',Th:'บ่าย',F:'ดึก',S:'เวรS',Su:'เวรSu',O:'OT',V:'ลา',BD:'หยุดรช.',X:'หยุด','-':'—' };
+
+  function renderResult(data) {
+    currentSchedule = data;
+    document.getElementById('result-month-label').textContent = data.month || '';
+
+    let morning=0, afternoon=0, night=0, off=0;
+    data.days.forEach(({ shift: s }) => {
+      if (s==='M'||s==='T') morning++;
+      else if (s==='W'||s==='Th') afternoon++;
+      else if (s==='F') night++;
+      else off++;
+    });
+    document.getElementById('stat-morning').textContent = morning;
+    document.getElementById('stat-afternoon').textContent = afternoon;
+    document.getElementById('stat-night').textContent = night;
+    document.getElementById('stat-off').textContent = off;
+    document.getElementById('stat-hours').textContent = (morning + afternoon + night) * 8;
+
+    // Calendar
+    const grid = document.getElementById('cal-grid');
+    // Keep headers (first 7 children)
+    while (grid.children.length > 7) grid.removeChild(grid.lastChild);
+
+    const today = new Date();
+    const startDay = data.startDayOfWeek || 0;
+    const totalDays = data.totalDays || data.days.length;
+    const dayMap = {};
+    data.days.forEach(d => { dayMap[d.date] = d.shift; });
+
+    // Empty cells before first day
+    for (let i = 0; i < startDay; i++) {
+      const el = document.createElement('div');
+      el.className = 'cal-day empty';
+      grid.appendChild(el);
+    }
+
+    for (let d = 1; d <= totalDays; d++) {
+      const shift = dayMap[d] || '';
+      const dayOfWeek = (startDay + d - 1) % 7;
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+      // check today
+      const monthNames = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+      const yearBE = parseInt(data.month?.match(/\d{4}/)?.[0] || '0');
+      const yearCE = yearBE - 543;
+      const monthIdx = monthNames.findIndex(m => data.month?.includes(m));
+      const isToday = today.getDate()===d && today.getMonth()===monthIdx && today.getFullYear()===yearCE;
+
+      const el = document.createElement('div');
+      el.className = `cal-day has-shift shift-${shift || 'none'} ${isWeekend ? 'weekend-day' : ''} ${isToday ? 'today-highlight' : ''}`;
+
+      const dateEl = document.createElement('div');
+      dateEl.className = 'cal-date';
+      dateEl.textContent = d;
+      el.appendChild(dateEl);
+
+      if (shift) {
+        const badge = document.createElement('div');
+        badge.className = 'cal-badge';
+        badge.textContent = shift;
+        el.appendChild(badge);
+
+        const label = document.createElement('div');
+        label.className = 'cal-shift-name';
+        label.textContent = SHIFT_LABELS[shift] || shift;
+        el.appendChild(label);
+      }
+      grid.appendChild(el);
+    }
+
+    showScreen('result-screen');
+  }
+
+  // ---- Firebase save/load ----
+  window.saveToFirebase = async function() {
+    if (!currentSchedule) return;
+    const firestore = await initFirebase();
+    if (!firestore) {
+      showToast('ยังไม่ได้ตั้งค่า Firebase — บันทึกเฉพาะในเครื่อง');
+      localStorage.setItem('jiSchedule', JSON.stringify(currentSchedule));
+      return;
+    }
+    try {
+      const key = `ji_${(currentSchedule.month||'unknown').replace(/\s/g,'_')}`;
+      await setDoc(doc(firestore, 'schedules', key), {
+        ...currentSchedule,
+        savedAt: new Date().toISOString()
+      });
+      localStorage.setItem('jiSchedule', JSON.stringify(currentSchedule));
+      showToast('☁️ บันทึกสำเร็จ!');
+    } catch(e) {
+      localStorage.setItem('jiSchedule', JSON.stringify(currentSchedule));
+      showToast('บันทึกในเครื่องแล้ว (Firebase ยังไม่พร้อม)');
+    }
+  };
+
+  // ---- Notifications ----
+  window.showNotifyScreen = function() {
+    const saved = localStorage.getItem('jiShiftTimes');
+    if (saved) {
+      const times = JSON.parse(saved);
+      document.getElementById('time-morning').value = times.morning || '07:00';
+      document.getElementById('time-afternoon').value = times.afternoon || '15:00';
+      document.getElementById('time-night').value = times.night || '23:00';
+      document.getElementById('time-s').value = times.s || '07:00';
+      document.getElementById('time-su').value = times.su || '15:00';
+    }
+    showScreen('notify-screen');
+  };
+
+  window.setNotifications = async function() {
+    const granted = await Notification.requestPermission() === 'granted';
+    if (!granted) {
+      showToast('จิต้องอนุญาตการแจ้งเตือนก่อนนะ');
+      return;
+    }
+    const shiftTimes = {
+      morning: document.getElementById('time-morning').value,
+      afternoon: document.getElementById('time-afternoon').value,
+      night: document.getElementById('time-night').value,
+      s: document.getElementById('time-s').value,
+      su: document.getElementById('time-su').value,
+    };
+    localStorage.setItem('jiShiftTimes', JSON.stringify(shiftTimes));
+    const minutesBefore = parseInt(document.getElementById('notify-before').value);
+    const count = scheduleNotifications(currentSchedule, shiftTimes, minutesBefore);
+    showToast(`🔔 ตั้งแจ้งเตือนแล้ว ${count} วัน`);
+  };
+
+  function scheduleNotifications(scheduleData, shiftTimes, minutesBefore) {
+    const workShifts = ['M','T','W','Th','F','S','Su','O'];
+    const startTimes = { M: shiftTimes.morning, T: shiftTimes.morning, W: shiftTimes.afternoon, Th: shiftTimes.afternoon, F: shiftTimes.night, S: shiftTimes.s, Su: shiftTimes.su };
+    const shiftLabels = { M:'เวรเช้า',T:'เวรเช้า',W:'เวรบ่าย',Th:'เวรบ่าย',F:'เวรดึก',S:'เวร S',Su:'เวร Su',O:'OT' };
+    const monthNames = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    const yearBE = parseInt(scheduleData.month?.match(/\d{4}/)?.[0] || '2569');
+    const yearCE = yearBE - 543;
+    const monthIdx = monthNames.findIndex(m => scheduleData.month?.includes(m));
+    let count = 0;
+    const now = new Date();
+    scheduleData.days.forEach(({ date, shift }) => {
+      if (!workShifts.includes(shift) || !startTimes[shift]) return;
+      const [h, m] = startTimes[shift].split(':').map(Number);
+      const shiftDate = new Date(yearCE, monthIdx, date, h, m);
+      const notifyAt = new Date(shiftDate - minutesBefore * 60000);
+      const ms = notifyAt - now;
+      if (ms > 0) {
+        setTimeout(() => {
+          new Notification('⏰ จิ ใกล้เวลาเข้าเวรแล้ว!', {
+            body: `${shiftLabels[shift]} วันที่ ${date} เริ่ม ${startTimes[shift]} น. อีก ${minutesBefore} นาที`,
+            icon: '/icon-192.png',
+            tag: `ji-${date}-${shift}`,
+          });
+        }, ms);
+        count++;
+      }
+    });
+    return count;
+  }
+
+  // ---- Copy ----
+  window.copyScheduleHandler = function() {
+    if (!currentSchedule) return;
+    const labels = { M:'เวรเช้า',T:'เวรเช้า',W:'เวรบ่าย',Th:'เวรบ่าย',F:'เวรดึก',S:'เวร S',Su:'เวร Su',O:'OT',V:'ลาพักร้อน',BD:'วันหยุดราชการ',X:'หยุด','-':'—' };
+    const emoji = { M:'🌅',T:'🌅',W:'🌇',Th:'🌇',F:'🌙',S:'☀️',Su:'🌆',O:'⏰',V:'🌴',BD:'🎌',X:'🔴' };
+    let text = `📅 ตารางเวรจิ\n${currentSchedule.month}\n${'─'.repeat(20)}\n`;
+    currentSchedule.days.forEach(({ date, shift }) => {
+      text += `วันที่ ${String(date).padStart(2,' ')}: ${emoji[shift]||'⬜'} ${(shift||'—').padEnd(3,' ')} ${labels[shift]||'—'}\n`;
+    });
+    let m=0,a=0,n=0;
+    currentSchedule.days.forEach(({shift:s})=>{ if(s==='M'||s==='T')m++; else if(s==='W'||s==='Th')a++; else if(s==='F')n++; });
+    text += `${'─'.repeat(20)}\nเช้า ${m} | บ่าย ${a} | ดึก ${n} | รวม ${(m+a+n)*8} ชม.`;
+    navigator.clipboard.writeText(text).then(() => showToast('📋 คัดลอกแล้ว!'));
+  };
+
+  // ---- Screen nav ----
+  window.showScreen = function(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  };
+
+  // ---- Toast ----
+  window.showToast = function(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  };
+
+  // ---- File input handling ----
+  const fileInput = document.getElementById('file-input');
+  const previewImg = document.getElementById('preview-img');
+  const analyzeBtn = document.getElementById('analyze-btn');
+  let base64Image = null;
+
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const result = ev.target.result;
+      previewImg.src = result;
+      previewImg.classList.add('show');
+      base64Image = result.split(',')[1];
+      analyzeBtn.disabled = false;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  analyzeBtn.addEventListener('click', async () => {
+    if (!base64Image) return;
+    const month = document.getElementById('month-input').value.trim() || 'เดือนนี้';
+    const errorBox = document.getElementById('error-box');
+    errorBox.classList.remove('show');
+    analyzeBtn.disabled = true;
+    document.getElementById('loading').classList.add('show');
+    try {
+      const data = await analyzeSchedule(base64Image, month);
+      document.getElementById('loading').classList.remove('show');
+      if (data.error) {
+        errorBox.textContent = `❌ ${data.error}`;
+        errorBox.classList.add('show');
+        analyzeBtn.disabled = false;
+        return;
+      }
+      localStorage.setItem('jiSchedule', JSON.stringify(data));
+      renderResult(data);
+    } catch (err) {
+      document.getElementById('loading').classList.remove('show');
+      errorBox.textContent = `❌ เกิดข้อผิดพลาด: ${err.message}`;
+      errorBox.classList.add('show');
+      analyzeBtn.disabled = false;
+    }
+  });
+
+  // ---- Default month ----
+  function getDefaultMonth() {
+    const now = new Date();
+    const monthNamesTH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    return `${monthNamesTH[now.getMonth()]} ${now.getFullYear() + 543}`;
+  }
+  document.getElementById('month-input').value = getDefaultMonth();
+
+  // ---- Load saved on start ----
+  window.addEventListener('load', () => {
+    const saved = localStorage.getItem('jiSchedule');
+    if (saved) {
+      currentSchedule = JSON.parse(saved);
+      document.getElementById('saved-banner').style.display = 'block';
+      document.getElementById('view-saved-btn').addEventListener('click', () => {
+        renderResult(currentSchedule);
+      });
+    }
+  });
+
+  // ---- Service Worker ----
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
