@@ -3,3 +3,7 @@ node_modules/
 .vercel/
 .firebaserc
 generate-icons.js
+package.json
+package-lock.json
+
+.vercel
