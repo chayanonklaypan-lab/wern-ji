@@ -95,6 +95,7 @@
     .upload-text { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 12px; }
     .upload-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .upload-btn {
+      position: relative;
       padding: 12px 10px;
       border: 2px solid var(--primary);
       border-radius: var(--radius);
@@ -110,9 +111,19 @@
       gap: 4px;
       transition: all 0.2s;
       -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
     .upload-btn:active { background: var(--primary); color: white; transform: scale(0.97); }
-    .upload-btn-icon { font-size: 24px; }
+    .upload-btn input[type="file"] {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      font-size: 0;
+    }
+    .upload-btn-icon { font-size: 24px; pointer-events: none; }
+    .upload-btn span { pointer-events: none; }
     .upload-hint { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
 
     .preview-img {
@@ -407,23 +418,19 @@
     <div class="upload-icon">🗓️</div>
     <div class="upload-text">เลือกรูปตารางเวรของจิ</div>
     <div class="upload-buttons">
-      <label class="upload-btn" for="file-input-camera">
+      <label class="upload-btn">
+        <input type="file" id="file-input-camera" accept="image/*" capture="environment">
         <span class="upload-btn-icon">📷</span>
         <span>ถ่ายรูป</span>
       </label>
-      <label class="upload-btn" for="file-input-gallery">
+      <label class="upload-btn">
+        <input type="file" id="file-input-gallery" accept="image/*">
         <span class="upload-btn-icon">🖼️</span>
         <span>เลือกจากคลัง</span>
       </label>
     </div>
     <div class="upload-hint">รองรับ JPG, PNG, HEIC ทุกรูปแบบ</div>
   </div>
-
-  <!-- file inputs อยู่นอก label — label ผูกผ่าน for/id -->
-  <input type="file" id="file-input-camera" accept="image/*" capture="environment"
-    style="position:fixed;top:-200px;left:-200px;width:1px;height:1px;opacity:0;pointer-events:none;" tabindex="-1">
-  <input type="file" id="file-input-gallery" accept="image/*"
-    style="position:fixed;top:-200px;left:-200px;width:1px;height:1px;opacity:0;pointer-events:none;" tabindex="-1">
 
   <img id="preview-img" class="preview-img" alt="ตัวอย่างรูป">
 
